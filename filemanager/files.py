@@ -2,7 +2,7 @@ import os
 import errno
 import sys
 from pathlib import Path
-from typing import List
+from typing import Dict
 
 # Sadly, Python fails to provide the following magic number for us.
 ERROR_INVALID_NAME = 123
@@ -99,40 +99,51 @@ def is_pathname_valid(pathname: str) -> bool:
     # Did we mention this should be shipped with Python already?
 
 
+class FilePath(object):
+    def __init__(self, file_path: str) -> None:
+        if is_pathname_valid(file_path) is False or file_path == "":
+            raise ValueError('Path must be valid, and not empty')
+        else:
+            self.path = file_path
+
+
+class FileContent(object):
+    def __init__(self, file_contents: str) -> None:
+        self.content = file_contents
+
+
 class FileManifest(object):
     """
     Manages a list of strings representing paths to files that we want to create.
     """
     def __init__(self):
-        self.file_manifest: List[str] = []
+        self.file_manifest: Dict[str, FileContent] = {}
 
-    def add_file(self, path: str) -> bool:
+    def add_to_manifest(self, path: FilePath, content: FileContent) -> bool:
         """
         Adds non duplicate paths to the file manifest list
         :param str path: full path to file including filename.
+        :param FileContent content: Contents -- if any, to be written to the file.
         :return: True when the value is added to the manifest, False when not.
         :rtype: bool
         """
         # Path is valid and not already in the list
-        if is_pathname_valid(path) and (path not in self.file_manifest):
-            self.file_manifest.append(path)
-            return True
-        else:
-            return False
+        self.file_manifest[path.path] = content
+        return True
 
-    def remove_file(self, path: str = None) -> bool:
+    def remove_from_manifest(self, path: FilePath = None) -> bool:
         """
         Removes the provided path from the file manifest list, provided it exists
-        :param str path: full path to file including filename.
+        :param FilePath path: full path to file including filename.
         :return: True when the file is removed from the file manifest list. False when not.
         :rtype: bool
         """
         if path is not None:
             try:
-                del self.file_manifest[self.file_manifest.index(path)]
-            except ValueError as e:
+                del self.file_manifest[path.path]
+                return True
+            except KeyError as e:
                 return False
-            return True
         else:
             return False
 
@@ -144,20 +155,24 @@ class File(object):
     def __init__(self, mainfest: FileManifest):
         self.manifest = mainfest.file_manifest
 
-    def create_files(self) -> bool:
+    def create_and_write_files(self) -> bool:
         """
         Loops through the file manifest and creates the files
         :return: True if no errors creating files, False if any are encountered
         :rtype: bool
         """
         try:
-            for file in self.manifest:
-                os.makedirs(os.path.dirname(file), exist_ok=True)
-                Path(file).touch()
+            for path, content in self.manifest.items():
+                os.makedirs(os.path.dirname(path), exist_ok=True)
+                Path(path).touch()
+                self.write_file(path, content.content)
         except Exception as e:
-            print(e.message, e.args)
+            print(e, e.args)
             return False
         return True
-            # with open(file, "w") as f:
-            #     f.write(template)
+
+    @staticmethod
+    def write_file(file: str, rendered_template: str) -> None:
+        with open(file, "w") as f:
+            f.write(rendered_template)
 

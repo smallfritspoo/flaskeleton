@@ -1,1 +1,7 @@
-from.files import File, FileManifest, is_pathname_valid
+from.files import (
+    File,
+    FileManifest,
+    FileContent,
+    FilePath,
+    is_pathname_valid
+)
