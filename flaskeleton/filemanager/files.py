@@ -122,6 +122,7 @@ class FileManifest(object):
     def add_to_manifest(self, path: FilePath, content: FileContent) -> bool:
         """
         Adds non duplicate paths to the file manifest list
+
         :param str path: full path to file including filename.
         :param FileContent content: Contents -- if any, to be written to the file.
         :return: True when the value is added to the manifest, False when not.
@@ -134,6 +135,7 @@ class FileManifest(object):
     def remove_from_manifest(self, path: FilePath = None) -> bool:
         """
         Removes the provided path from the file manifest list, provided it exists
+
         :param FilePath path: full path to file including filename.
         :return: True when the file is removed from the file manifest list. False when not.
         :rtype: bool
@@ -158,6 +160,7 @@ class File(object):
     def create_and_write_files(self) -> bool:
         """
         Loops through the file manifest and creates the files
+
         :return: True if no errors creating files, False if any are encountered
         :rtype: bool
         """
